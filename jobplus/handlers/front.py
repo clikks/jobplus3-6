@@ -18,11 +18,7 @@ def index():
     # popular_companies_info = Company.query.order_by(db.desc(Company.total_job_followers)).limit(8).all()
 
     # 最新公司列表
-    newest_companies_info = []
-    for company in User.query.filter_by(role=User.ROLE_COMPANY).order_by(db.desc(User.created_at)).limit(8).all():
-        if company.company_info is None:
-            continue
-        newest_companies_info.append(company.company_info)
+    newest_companies_info = Company.query.order_by(Company.created_at.desc()).limit(8).all()
 
     # 最新职位列表
     newest_jobs = Job.query.order_by(db.desc(Job.created_at)).limit(9).all()

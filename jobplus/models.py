@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 from datetime import datetime
+import os
 
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,7 +15,8 @@ db = SQLAlchemy()
 class Base(db.Model):
     __abstract__ = True
     created_at = db.Column(db.DateTime, default=datetime.utcnow, )
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class User(Base, UserMixin):
@@ -28,11 +30,14 @@ class User(Base, UserMixin):
     STATUS_SUSPENDED = -1
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(32), unique=True, index=True, nullable=False)
+    username = db.Column(
+        db.String(32), unique=True, index=True, nullable=False)
     email = db.Column(db.String(64), unique=True, index=True, nullable=False)
     _password = db.Column('password', db.String(256), nullable=False)
     role = db.Column(db.SmallInteger, default=ROLE_SEEKER)
     status = db.Column(db.SmallInteger, default=STATUS_NORMAL)
+    # 针对企业用户的访问量字段，由于放入Company表会影响表查询，所以放入User表
+    view_count = db.Column(db.Integer, default=0)
 
     # relationship
     seeker_info = db.relationship('Seeker', uselist=False, backref='user')
@@ -65,7 +70,7 @@ class User(Base, UserMixin):
     @property
     def is_company(self):
         return self.role == self.ROLE_COMPANY
-        
+
     def get_resume_count(self, resume_type):
         if resume_type is 'waiting':
             resume_status = STATUS_SENT
@@ -76,9 +81,9 @@ class User(Base, UserMixin):
         filters = {
             Delivery.company_id == self.company_info.id,
             Delivery.status == resume_status,
-            }
+        }
         resumes_count = len(Delivery.query.filter(*filters).all())
-        return resumes_count 
+        return resumes_count
 
 
 class Seeker(Base):
@@ -97,7 +102,8 @@ class Seeker(Base):
     EDU_OTHER = 5
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
 
     gender = db.Column(db.SmallInteger, default=GENDER_M, nullable=False)
 
@@ -139,28 +145,33 @@ STATUS_CHECKED = 2
 STATUS_ACCEPTED = 3
 STATUS_REJECTED = 4
 
+
 class Delivery(Base):
     __tablename__ = 'delivery'
-    
+
     id = db.Column('id', db.Integer, primary_key=True)
     resume_id = db.Column('resume_id', db.Integer, nullable=False, index=True)
     job_id = db.Column('job_id', db.Integer, index=True, nullable=False)
-    company_id = db.Column('company_id', db.Integer, index=True, nullable=False)
-    status = db.Column('status', db.SmallInteger, default=STATUS_SENT, nullable=False)
+    company_id = db.Column(
+        'company_id', db.Integer, index=True, nullable=False)
+    status = db.Column(
+        'status', db.SmallInteger, default=STATUS_SENT, nullable=False)
 
     def get_job(self, job_id):
         job = Job.query.filter_by(id=job_id).first()
         return job
-    
+
     def get_seeker(self, resume_id):
         seeker = Resume.query.filter_by(id=resume_id).first().user.seeker_info
         return seeker
-    
+
     def get_resume(self, resume_id):
         resume = Resume.query.filter_by(id=resume_id).first()
         return resume
-    
+
 # 简历表使用 MongoDB, 但暂时写个MySQL原型
+
+
 class Resume(Base):
     __tablename__ = 'resume'
 
@@ -172,8 +183,10 @@ class Resume(Base):
     GENDER_F = 20
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    resume_type = db.Column(db.SmallInteger, default=TYPE_WEB_RESUME, nullable=False)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    resume_type = db.Column(
+        db.SmallInteger, default=TYPE_WEB_RESUME, nullable=False)
 
     photo = db.Column(db.String(256))
     expect_salary_min = db.Column(db.Integer)
@@ -203,8 +216,9 @@ class Resume(Base):
 
 # 用户关注企业表
 Company_follows = db.Table('company_follows',
-                        db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
-                        db.Column('company_id', db.Integer, db.ForeignKey('company.id', ondelete='CASCADE'), primary_key=True))
+                           db.Column('user_id', db.Integer, db.ForeignKey(
+                                     'user.id', ondelete='CASCADE'), primary_key=True),
+                           db.Column('company_id', db.Integer, db.ForeignKey('company.id', ondelete='CASCADE'), primary_key=True))
 
 
 class Company(Base):
@@ -220,12 +234,14 @@ class Company(Base):
     SCALE_500_MORE = 4
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
 
     logo = db.Column(db.String(256), default=DEFAULT_LOGO_URL)
     web_url = db.Column(db.String(256), nullable=False)
     name = db.Column(db.String(128), unique=True, nullable=False, index=True)
-    found_date = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
+    found_date = db.Column(
+        db.DateTime, default=datetime.utcnow(), nullable=False)
     city = db.Column(db.String(32), default='北京', nullable=False)
     address = db.Column(db.String(512), nullable=False)
     scale = db.Column(db.SmallInteger, default=SCALE_15_LESS, nullable=False)
@@ -247,18 +263,18 @@ class Company(Base):
     total_resume_number = db.Column(db.Integer, default=0)
     # 所有职位的总关注人数
     total_job_followers = db.Column(db.Integer, default=0)
-    view_count = db.Column(db.Integer, default=0)
 
     jobs = db.relationship('Job', backref='company')
-    follows = db.relationship('User', secondary=Company_follows, backref=db.backref('company_follows'))
-    # resume = db.relationship('Resume', secondary=Delivery, backref=db.backref('company'))
+    follows = db.relationship(
+        'User', secondary=Company_follows, backref=db.backref('company_follows'))
 
     def __repr__(self):
         return '<Company(id={})>'.format(self.id)
 
     @property
     def jobs_available(self):
-        job_available = [job for job in self.jobs if job.status is job.STATUS_OPENED]
+        job_available = [
+            job for job in self.jobs if job.status is job.STATUS_OPENED]
         return len(job_available)
 
     def update_statics(self):
@@ -282,18 +298,24 @@ class Company(Base):
     @property
     def new_job(self):
         newest_job = Job.query.filter_by(company_id=self.id).\
-        order_by(Job.updated_at.desc()).first()
+            order_by(Job.updated_at.desc()).first()
         return newest_job
 
     def get_img(self, img):
-        if img == 'logo':
-            if self.logo.startswith('http'):
-                return self.logo
-            return '/static/company_img/' + self.logo
-        if img == 'manager_photo':
-            if self.manager_photo.startswith('http'):
-                return self.manager_photo
-            return '/static/company_img/' + self.manager_photo
+        """ 获取企业logo图片或负责人头像
+            Args (str): img参数只接受'logo'或'manager_photo'字符串，
+                        返回相应的图片地址。
+            e.g. get_img('logo')
+                return '/static/company_img/imgname.jpg' 
+        """
+        arg = {'logo': self.logo, 'manager_photo': self.manager_photo}
+        path = os.path.join('/static/company_img', arg.get(img))
+        if arg.get(img).startswith('http'):
+            return arg.get(img)
+        elif os.path.exists(path):
+            return path
+        else:
+            return os.path.join('/static/company_img', '_'.join([str(img), 'default.jpg']))
 
     def get_job_status(self, status):
         if status is 'online':
@@ -306,9 +328,12 @@ class Company(Base):
 
 # 用户可以关注某个职位
 Following = db.Table('following',
-                     db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
-                     db.Column('job_id', db.Integer, db.ForeignKey('job.id', ondelete='CASCADE'), primary_key=True),
-                     db.Column('status', db.SmallInteger, default=STATUS_SENT, nullable=False)
+                     db.Column('user_id', db.Integer, db.ForeignKey(
+                         'user.id', ondelete='CASCADE'), primary_key=True),
+                     db.Column('job_id', db.Integer, db.ForeignKey(
+                         'job.id', ondelete='CASCADE'), primary_key=True),
+                     db.Column(
+                         'status', db.SmallInteger, default=STATUS_SENT, nullable=False)
                      )
 
 
@@ -341,19 +366,22 @@ class Job(Base):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(64), index=True, nullable=False)
     status = db.Column(db.SmallInteger, default=STATUS_OPENED, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     salary_min = db.Column(db.Integer, default=0)
     salary_max = db.Column(db.Integer, default=0)
     exp_required = db.Column(db.Integer, default=0)
-    edu_required = db.Column(db.SmallInteger, default=EDU_NO_LIMIT, nullable=False)
+    edu_required = db.Column(
+        db.SmallInteger, default=EDU_NO_LIMIT, nullable=False)
     is_full_time = db.Column(db.Boolean, default=True, nullable=False)
     description = db.Column(db.Text, nullable=False)
     work_address = db.Column(db.String(512), nullable=False)
-    company_id = db.Column(db.Integer, db.ForeignKey('company.id', ondelete='CASCADE'))
+    company_id = db.Column(
+        db.Integer, db.ForeignKey('company.id', ondelete='CASCADE'))
 
     # relationship
-    # resumes = db.relationship('Resume', secondary=Delivery, backref=db.backref('jobs'))
-    following_users = db.relationship('User', secondary=Following, backref=db.backref('following_jobs'))
+    following_users = db.relationship(
+        'User', secondary=Following, backref=db.backref('following_jobs'))
 
     # statics
     # 收到的简历数量
@@ -374,7 +402,8 @@ class Job(Base):
 
     @property
     def current_user_is_applied(self):
-        resume_id=Resume.query.filter_by(user_id=current_user.id).first().id
+        resume_id = Resume.query.filter_by(user_id=current_user.id).first().id
         if resume_id:
-            d = Delivery.query.filter_by(job_id=self.id,resume_id=resume_id).first()
+            d = Delivery.query.filter_by(
+                job_id=self.id, resume_id=resume_id).first()
         return (d is not None)

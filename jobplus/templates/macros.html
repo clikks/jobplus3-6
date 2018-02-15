@@ -43,23 +43,41 @@
 {% endmacro %}
 
 {% macro render_index_company(company_info) %}
+<div class="col-md-3">
+  <div class="row text-center">
+    <div class="panel panel-primary" style="margin-right: 15px;">
+      <div class="panel-heading">
+          <a href="#"><h3 class="panel-title text-center">{{ company_info.name | long_string_cutter(max_length=10) }}</h3></a>
+      </div>
+      <div class="panel-body" style="height:300px;">
+          <img src="{{ company_info.get_img('logo') }}" class="img-thumbnail pull-center manager_photo">
+          <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="100%" color=#987cb9 SIZE=3>
+          {% for industry in company_info.industry | sentence_split %}
+          <!-- <p>{{ industry }}</p> -->
+          <span class="label label-success">{{ industry }}</span>
+          {% endfor %}
+          <p>
+              <span>{{ company_info.slogan | long_string_cutter(max_length=40) }}</span>
+          </p>
+      </div>
+      <a href="{{ url_for('company.company_detail', company_id=company_info.id) }}"><div class="panel-footer">查看详情</div></a>
+    </div>
+  </div>
+</div>
+<!-- </div>
   <div class="col-sm-3 col-md-3">
     <div class="thumbnail">
-      {% if company_info.logo == None %}
-      <img src="{{ url_for('static', filename='img/default_logo.jpg') }}" alt="...">
-      {% else %}
-      <img width="100px" height="100px" src="{{ company_info.get_img('logo') }}" alt="...">
-      {% endif %}
+      <img class="media-object img-thumbnail company-img" src="{{ company_info.get_img('logo') }}" alt="...">
       <div class="caption">
         <h3><b class="company__name">{{ company_info.name | long_string_cutter(max_length=10) }}</b></h3>
         <p>{{ company_info.industry }} 行业</p>
         <p class="company__slogan">{{ company_info.slogan }}</p>
-        <p><a href="{{ company_info.url }}" class="btn btn-primary" role="button">查看详情</a>
+        <p class="text-center"><a href="{{ url_for('company.company_detail', company_id=company_info.id) }}" class="btn btn-primary" role="button">查看详情</a>
             <!-- <a href="#" class="btn btn-default" role="button">关注</a> -->
-        </p>
+        <!-- </p>
       </div>
     </div>
-  </div>
+  </div> -->
 {% endmacro %}
 
 {% macro render_form(form, url) %}

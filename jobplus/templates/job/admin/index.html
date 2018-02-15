@@ -26,11 +26,8 @@
                         <span><a href="{{ url_for('job.interviewlist') }}">邀请面试<span class="badge">{{ current_user.get_resume_count('accept') }}</span></a></span>
                     </div>
                 </li>
-                {% if active_page == 'jobs' %}
-                <li><a class="link" href="{{ url_for('job.add_job') }}"><i class="glyphicon glyphicon glyphicon-plus"></i>增加职位</a>
-                </li>
-                {% else %}
-                {% endif %}
+                <li><a class="link" href="{{ url_for('job.add_job') }}"><i class="glyphicon glyphicon glyphicon-plus"></i>增加职位</a></li>
+                <li><a class="link" href="{{ url_for('company.edit_profile') }}"><i class="glyphicon glyphicon-edit"></i>信息修改</a></li>
             </ul>
             {% block operation %}{% endblock %}
         </div>

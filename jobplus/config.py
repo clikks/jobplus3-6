@@ -21,6 +21,10 @@ class DevelopmentConfig(BaseConfig):
 
 class ProductionConfig(BaseConfig):
     DEBUG = False
+    SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root@localhost:3306/jobplus?charset=utf8'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    TEMPLATES_AUTO_RELOAD = True
+    UPLOADED_PHOTOS_DEST = os.getcwd() + '/jobplus/static/company_img'
 
 
 class TestingConfig(BaseConfig):

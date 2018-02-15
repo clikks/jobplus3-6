@@ -21,6 +21,7 @@ def profile():
     if form.validate_on_submit():
         form.update_user()
         flash('更新成功', 'success')
+        return redirect(url_for('front.index'))
     return render_template('user.html', form=form)
 
 

@@ -56,10 +56,10 @@ def company_list():
 @company.route('/detail/<int:company_id>')
 def company_detail(company_id):
     company = Company.query.get_or_404(company_id)
-    if company.view_count is None:
-        company.view_count = 0
-    company.view_count += 1
-    db.session.add(company)
+    if company.user.view_count is None:
+        company.user.view_count = 0
+    company.user.view_count += 1
+    db.session.add(company.user)
     db.session.commit()
     return render_template('company/detail.html', company_obj=company)
 
